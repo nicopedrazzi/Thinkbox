@@ -1,15 +1,25 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "commonjs",
-    "allowJs": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "types": ["node", "electron", "vite/client"],
     "skipLibCheck": true,
+    "strict": true,
     "esModuleInterop": true,
-    "noImplicitAny": true,
-    "sourceMap": true,
-    "baseUrl": ".",
-    "outDir": "dist",
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
     "moduleResolution": "node",
-    "resolveJsonModule": true
-  }
+    "noEmit": true
+  },
+  "include": [
+    "src",
+    "forge.config.ts",
+    "vite.main.config.ts",
+    "vite.preload.config.ts",
+    "vite.renderer.config.ts",
+    "forge.env.d.ts"
+  ],
+  "exclude": ["dist", "out", "node_modules"]
 }
