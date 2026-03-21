@@ -75,6 +75,17 @@ ipcMain.handle('notes:show', async (): Promise<savedNote[]> => {
   }));
 });
 
+ipcMain.handle('notes:delete', async (_event, noteId: unknown): Promise<{ deleted: boolean }> => {
+  if (typeof noteId !== 'number' || !Number.isInteger(noteId) || noteId <= 0) {
+    throw new Error('Invalid note id.');
+  }
+
+  const db = await getDb();
+  const result = await db.run('DELETE FROM notes WHERE id = ?', noteId);
+
+  return { deleted: result.changes > 0 };
+});
+
 app
   .whenReady()
   .then(async () => {

@@ -7,6 +7,7 @@ type SavedNote = {
 interface ThinkboxApi {
   saveNote: (content: string) => Promise<SavedNote>;
   showNote: () => Promise<SavedNote[]>;
+  deleteNote: (noteId: number) => Promise<{ deleted: boolean }>;
 }
 
 interface Window {
