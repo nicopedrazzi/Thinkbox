@@ -33,3 +33,31 @@ textarea {
   min-height: 1.5rem;
   color: #333;
 }
+
+#show-btn {
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.notes-box {
+  margin-top: 1.25rem;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fafafa;
+}
+
+.notes-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.notes-table th,
+.notes-table td {
+  text-align: left;
+  border-bottom: 1px solid #e6e6e6;
+  padding: 8px;
+  vertical-align: top;
+}

@@ -57,6 +57,24 @@ ipcMain.handle('notes:save', async (_event, content: unknown): Promise<savedNote
   };
 });
 
+ipcMain.handle('notes:show', async (): Promise<savedNote[]> => {
+  const db = await getDb();
+  const rows = await db.all<Array<{ id: number; content: string; created_at: string }>>(
+    `
+      SELECT id, content, created_at
+      FROM notes
+      WHERE date(created_at, 'localtime') = date('now', 'localtime')
+      ORDER BY id DESC
+    `,
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    content: row.content,
+    createdAt: row.created_at,
+  }));
+});
+
 app
   .whenReady()
   .then(async () => {

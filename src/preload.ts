@@ -8,4 +8,5 @@ type SavedNote = {
 
 contextBridge.exposeInMainWorld('thinkbox', {
   saveNote: (content: string): Promise<SavedNote> => ipcRenderer.invoke('notes:save', content),
+  showNote: (): Promise<SavedNote[]> => ipcRenderer.invoke('notes:show'),
 });

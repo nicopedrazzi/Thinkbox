@@ -11,7 +11,22 @@
     <label for="note">Write something:</label>
     <textarea id="note" placeholder="Type here..."></textarea>
     <button id="send-btn" type="button">Send</button>
+    <button id="show-btn" type="button">Show today's notes</button>
     <p id="status" aria-live="polite"></p>
+    <section class="notes-box">
+  <h3>Saved Notes</h3>
+  <table class="notes-table" id="notes-table">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Content</th>
+        <th>Created</th>
+      </tr>
+    </thead>
+    <tbody id="notes-tbody"></tbody>
+  </table>
+</section>
+
     <script type="module" src="/src/renderer.ts"></script>
   </body>
 </html>
