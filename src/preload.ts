@@ -1,3 +1,11 @@
-// See the Electron documentation for details on how to use preload scripts:
-// https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
-export {};
+import { contextBridge, ipcRenderer } from 'electron';
+
+type SavedNote = {
+  id: number;
+  content: string;
+  createdAt: string;
+};
+
+contextBridge.exposeInMainWorld('thinkbox', {
+  saveNote: (content: string): Promise<SavedNote> => ipcRenderer.invoke('notes:save', content),
+});

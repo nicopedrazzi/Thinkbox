@@ -10,7 +10,7 @@ export async function initDb() {
   });
 
   await db.exec(`
-    CREATE TABLE notes (
+    CREATE TABLE IF NOT EXISTS notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
