@@ -7,9 +7,11 @@
   </head>
   <body>
     <h1>Think Box</h1>
-    <h2 class = "subtitle"> Write your current thought and come back later!</h2>
+    <h2 class="subtitle">Write your current thought and come back later!</h2>
     <label for="note">Write something:</label>
     <textarea id="note" placeholder="Type here..."></textarea>
+    <button id="send-btn" type="button">Send</button>
+    <p id="status" aria-live="polite"></p>
     <script type="module" src="/src/renderer.ts"></script>
   </body>
 </html>

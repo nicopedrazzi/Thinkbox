@@ -20,4 +20,16 @@ textarea {
   min-height: 120px;
   padding: 10px;
   font-size: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+#send-btn {
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+#status {
+  min-height: 1.5rem;
+  color: #333;
 }
