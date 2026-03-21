@@ -6,3 +6,18 @@ body {
   max-width: 38rem;
   padding: 2rem;
 }
+
+.subtitle {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #666;
+  margin-top: -8px;
+  margin-bottom: 16px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px;
+  font-size: 1rem;
+}
