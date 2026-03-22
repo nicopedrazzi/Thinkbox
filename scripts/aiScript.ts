@@ -27,7 +27,7 @@ const parseModelJson = (raw: string): NoteClassification => {
 
 const PROMPT_FILE_PATH = path.resolve(process.cwd(), 'src/assets/notePrompt.txt');
 
-const prompt = await readFile(PROMPT_FILE_PATH, 'utf8');
+const promptPromise = readFile(PROMPT_FILE_PATH, 'utf8');
 
 export async function classifyWithLocalModel(content: string): Promise<NoteClassification> {
   const noteText = content.trim();
@@ -35,6 +35,7 @@ export async function classifyWithLocalModel(content: string): Promise<NoteClass
     throw new Error('Cannot classify an empty note.');
   }
 
+  const prompt = await promptPromise;
   const finalPrompt = `${prompt}\n\nClassify this note:\n${noteText}`;
 
   const response = await fetch('http://localhost:11434/api/generate', {
@@ -42,7 +43,7 @@ export async function classifyWithLocalModel(content: string): Promise<NoteClass
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'qwen2.5:3b',
-      finalPrompt,
+      prompt: finalPrompt,
       stream: false,
       format: 'json',
     }),

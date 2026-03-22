@@ -13,6 +13,19 @@ type GeneratedReminder = Awaited<ReturnType<typeof classifyWithLocalModel>> & {
   noteId: number;
 };
 
+type savedReminder = {
+  id: number;
+  noteId: number | null;
+  noteContent: string | null;
+  category: GeneratedReminder['category'];
+  shouldCreateReminder: boolean;
+  reminderTitle: string | null;
+  reminderText: string | null;
+  reminderDate: string | null;
+  priority: GeneratedReminder['priority'];
+  createdAt: string;
+};
+
 let dbPromise: ReturnType<typeof initDb> | undefined;
 
 const getDb = () => dbPromise ??= initDb();
@@ -87,9 +100,7 @@ ipcMain.handle('notes:delete', async (_event, noteId: unknown): Promise<{ delete
 
   const db = await getDb();
   const result = await db.run('DELETE FROM notes WHERE id = ?', noteId);
-  if (result.changes === undefined){
-    throw new Error("Undefined result");
-  }
+
   return { deleted: result.changes > 0 };
 });
 
@@ -139,6 +150,52 @@ ipcMain.handle('notes:generate', async (): Promise<GeneratedReminder[]> => {
   }
 
   return generatedReminders;
+});
+
+ipcMain.handle('reminders:show', async (): Promise<savedReminder[]> => {
+  const db = await getDb();
+  const rows = await db.all<Array<{
+    id: number;
+    note_id: number | null;
+    note_content: string | null;
+    category: GeneratedReminder['category'];
+    should_create_reminder: number;
+    reminder_title: string | null;
+    reminder_text: string | null;
+    reminder_date: string | null;
+    priority: GeneratedReminder['priority'];
+    created_at: string;
+  }>>(
+    `
+      SELECT
+        r.id,
+        r.note_id,
+        n.content AS note_content,
+        r.category,
+        r.should_create_reminder,
+        r.reminder_title,
+        r.reminder_text,
+        r.reminder_date,
+        r.priority,
+        r.created_at
+      FROM reminders AS r
+      LEFT JOIN notes AS n ON n.id = r.note_id
+      ORDER BY r.id DESC
+    `,
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    noteId: row.note_id,
+    noteContent: row.note_content,
+    category: row.category,
+    shouldCreateReminder: row.should_create_reminder === 1,
+    reminderTitle: row.reminder_title,
+    reminderText: row.reminder_text,
+    reminderDate: row.reminder_date,
+    priority: row.priority,
+    createdAt: row.created_at,
+  }));
 });
 
 

@@ -6,9 +6,17 @@ const sendButton = document.querySelector<HTMLButtonElement>('#send-btn');
 const showButton = document.querySelector<HTMLButtonElement>('#show-btn');
 const status = document.querySelector<HTMLParagraphElement>('#status');
 const notesBody = document.querySelector<HTMLTableSectionElement>('#notes-tbody');
+const remindersBody = document.querySelector<HTMLTableSectionElement>('#reminders-tbody');
 const aiGeneratorBtn = document.querySelector<HTMLButtonElement>('#gen-btn');
 
 const formatDate = (isoDate: string): string => new Date(isoDate).toLocaleString();
+const formatReminderDate = (isoDate: string | null): string => {
+  if (!isoDate) {
+    return '—';
+  }
+  const parsedDate = new Date(isoDate);
+  return Number.isNaN(parsedDate.getTime()) ? isoDate : parsedDate.toLocaleString();
+};
 
 const renderNotes = (savedNotes: SavedNote[]) => {
   if (!notesBody) {
@@ -33,6 +41,34 @@ const renderNotes = (savedNotes: SavedNote[]) => {
   }
 };
 
+const renderReminders = (savedReminders: SavedReminder[]) => {
+  if (!remindersBody) {
+    return;
+  }
+
+  remindersBody.innerHTML = '';
+
+  for (const reminder of savedReminders) {
+    const row = document.createElement('tr');
+    const reminderText = reminder.reminderText ?? '';
+    const reminderTitle = reminder.reminderTitle ?? '—';
+    const noteIdLabel = reminder.noteId === null ? '—' : String(reminder.noteId);
+
+    row.innerHTML = `
+      <td>${noteIdLabel}</td>
+      <td>${reminder.category}</td>
+      <td>${reminder.priority}</td>
+      <td>
+        <strong>${reminderTitle}</strong>
+        ${reminderText ? `<div>${reminderText}</div>` : ''}
+      </td>
+      <td>${formatReminderDate(reminder.reminderDate)}</td>
+    `;
+
+    remindersBody.append(row);
+  }
+};
+
 const loadNotes = async () => {
   if (!status) {
     return;
@@ -46,6 +82,20 @@ const loadNotes = async () => {
     status.textContent = `Loaded ${savedNotes.length} note(s).`;
   } catch (error) {
     const messageText = error instanceof Error ? error.message : 'Failed to load notes.';
+    status.textContent = messageText;
+  }
+};
+
+const loadReminders = async () => {
+  if (!status) {
+    return;
+  }
+
+  try {
+    const reminders = await window.thinkbox.showReminders();
+    renderReminders(reminders);
+  } catch (error) {
+    const messageText = error instanceof Error ? error.message : 'Failed to load reminders.';
     status.textContent = messageText;
   }
 };
@@ -91,6 +141,7 @@ if (showButton && status) {
   const showNote = async () => {
     showButton.disabled = true;
     await loadNotes();
+    await loadReminders();
     showButton.disabled = false;
   };
 
@@ -106,6 +157,7 @@ if (aiGeneratorBtn && status) {
 
     try {
       const reminders = await window.thinkbox.generateNote();
+      await loadReminders();
 
       if (reminders.length === 0) {
         status.textContent = 'Nothing new to add.';
@@ -125,6 +177,11 @@ if (aiGeneratorBtn && status) {
   aiGeneratorBtn.addEventListener('click', () => {
     void generateReminders();
   });
+}
+
+if (status) {
+  void loadNotes();
+  void loadReminders();
 }
 
 if (notesBody && status) {
@@ -167,4 +224,3 @@ if (notesBody && status) {
     })();
   });
 }
-

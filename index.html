@@ -13,8 +13,7 @@
     <button id="send-btn" type="button">Send</button>
     <button id="show-btn" type="button">Show today's notes</button>
     <button id="gen-btn" type="button">Generate reminders</button>
-    
-</label>
+
     <p id="status" aria-live="polite"></p>
     <section class="notes-box">
   <h3>Saved Notes</h3>
@@ -28,6 +27,22 @@
       </tr>
     </thead>
     <tbody id="notes-tbody"></tbody>
+  </table>
+</section>
+
+    <section class="notes-box">
+  <h3>Generated Reminders</h3>
+  <table class="notes-table" id="reminders-table">
+    <thead>
+      <tr>
+        <th>Note ID</th>
+        <th>Category</th>
+        <th>Priority</th>
+        <th>Reminder</th>
+        <th>When</th>
+      </tr>
+    </thead>
+    <tbody id="reminders-tbody"></tbody>
   </table>
 </section>
 
