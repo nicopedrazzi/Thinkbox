@@ -15,6 +15,7 @@
   },
   "include": [
     "src",
+    "scripts",
     "forge.config.ts",
     "vite.main.config.ts",
     "vite.preload.config.ts",

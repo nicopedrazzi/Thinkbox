@@ -6,6 +6,7 @@ const sendButton = document.querySelector<HTMLButtonElement>('#send-btn');
 const showButton = document.querySelector<HTMLButtonElement>('#show-btn');
 const status = document.querySelector<HTMLParagraphElement>('#status');
 const notesBody = document.querySelector<HTMLTableSectionElement>('#notes-tbody');
+const aiGeneratorBtn = document.querySelector<HTMLButtonElement>('#gen-btn');
 
 const formatDate = (isoDate: string): string => new Date(isoDate).toLocaleString();
 
