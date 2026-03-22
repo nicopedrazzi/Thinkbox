@@ -99,6 +99,34 @@ if (showButton && status) {
   });
 }
 
+if (aiGeneratorBtn && status) {
+  const generateReminders = async () => {
+    aiGeneratorBtn.disabled = true;
+    status.textContent = 'Creating reminders…';
+
+    try {
+      const reminders = await window.thinkbox.generateNote();
+
+      if (reminders.length === 0) {
+        status.textContent = 'Nothing new to add.';
+      } else {
+        status.textContent = `${reminders.length} reminders created.`;
+      }
+    } catch (error) {
+      status.textContent =
+        error instanceof Error
+          ? error.message
+          : 'Something went wrong while creating reminders.';
+    } finally {
+      aiGeneratorBtn.disabled = false;
+    }
+  };
+
+  aiGeneratorBtn.addEventListener('click', () => {
+    void generateReminders();
+  });
+}
+
 if (notesBody && status) {
   notesBody.addEventListener('click', (event) => {
     const target = event.target;
@@ -139,5 +167,4 @@ if (notesBody && status) {
     })();
   });
 }
-
 

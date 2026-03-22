@@ -27,7 +27,7 @@ const parseModelJson = (raw: string): NoteClassification => {
 
 const PROMPT_FILE_PATH = path.resolve(process.cwd(), 'src/assets/notePrompt.txt');
 
-const prompt = readFile(PROMPT_FILE_PATH, 'utf8');
+const prompt = await readFile(PROMPT_FILE_PATH, 'utf8');
 
 export async function classifyWithLocalModel(content: string): Promise<NoteClassification> {
   const noteText = content.trim();
