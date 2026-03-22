@@ -1,5 +1,6 @@
 import './index.css';
 import trashcanIcon from './assets/trashcan.svg';
+import modifyIcon from './assets/modify.svg';
 
 const note = document.querySelector<HTMLTextAreaElement>('#note');
 const sendButton = document.querySelector<HTMLButtonElement>('#send-btn');
@@ -8,6 +9,27 @@ const status = document.querySelector<HTMLParagraphElement>('#status');
 const notesBody = document.querySelector<HTMLTableSectionElement>('#notes-tbody');
 const remindersBody = document.querySelector<HTMLTableSectionElement>('#reminders-tbody');
 const aiGeneratorBtn = document.querySelector<HTMLButtonElement>('#gen-btn');
+let editingNoteId: number | null = null;
+
+const resetComposerToCreateMode = () => {
+  editingNoteId = null;
+
+  if (sendButton) {
+    sendButton.textContent = 'Send';
+  }
+};
+
+const setComposerToEditMode = (noteId: number, content: string) => {
+  if (!note || !sendButton || !status) {
+    return;
+  }
+
+  editingNoteId = noteId;
+  note.value = content;
+  note.focus();
+  sendButton.textContent = 'Save changes';
+  status.textContent = `Editing note #${noteId}.`;
+};
 
 const formatDate = (isoDate: string): string => new Date(isoDate).toLocaleString();
 const formatReminderDate = (isoDate: string | null): string => {
@@ -27,16 +49,43 @@ const renderNotes = (savedNotes: SavedNote[]) => {
 
   for (const savedNote of savedNotes) {
     const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${savedNote.id}</td>
-      <td>${savedNote.content}</td>
-      <td>${formatDate(savedNote.createdAt)}</td>
-      <td>
-        <button type="button" class="delete-note-btn" data-note-id="${savedNote.id}" aria-label="Delete note ${savedNote.id}">
-          <img src="${trashcanIcon}" alt="" />
-        </button>
-      </td>
-    `;
+
+    const idCell = document.createElement('td');
+    idCell.textContent = String(savedNote.id);
+
+    const contentCell = document.createElement('td');
+    contentCell.className = 'note-content-cell';
+    contentCell.textContent = savedNote.content;
+
+    const createdAtCell = document.createElement('td');
+    createdAtCell.textContent = formatDate(savedNote.createdAt);
+
+    const actionsCell = document.createElement('td');
+
+    const modifyButton = document.createElement('button');
+    modifyButton.type = 'button';
+    modifyButton.className = 'note-action-btn modify-note-btn';
+    modifyButton.dataset.noteId = String(savedNote.id);
+    modifyButton.setAttribute('aria-label', `Modify note ${savedNote.id}`);
+
+    const modifyImage = document.createElement('img');
+    modifyImage.src = modifyIcon;
+    modifyImage.alt = '';
+    modifyButton.append(modifyImage);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'note-action-btn delete-note-btn';
+    deleteButton.dataset.noteId = String(savedNote.id);
+    deleteButton.setAttribute('aria-label', `Delete note ${savedNote.id}`);
+
+    const deleteImage = document.createElement('img');
+    deleteImage.src = trashcanIcon;
+    deleteImage.alt = '';
+    deleteButton.append(deleteImage);
+
+    actionsCell.append(modifyButton, deleteButton);
+    row.append(idCell, contentCell, createdAtCell, actionsCell);
     notesBody.append(row);
   }
 };
@@ -101,24 +150,40 @@ const loadReminders = async () => {
 };
 
 if (note && sendButton && status) {
+  resetComposerToCreateMode();
+
   const sendNote = async () => {
     const message = note.value.trim();
 
     if (!message) {
-      status.textContent = 'Write something before sending.';
+      status.textContent =
+        editingNoteId === null
+          ? 'Write something before sending.'
+          : 'Write something before saving.';
       return;
     }
 
     sendButton.disabled = true;
-    status.textContent = 'Saving...';
+    status.textContent =
+      editingNoteId === null ? 'Saving...' : `Updating note #${editingNoteId}...`;
 
     try {
-      const savedNote = await window.thinkbox.saveNote(message);
-      status.textContent = `Saved note #${savedNote.id}.`;
+      if (editingNoteId === null) {
+        const savedNote = await window.thinkbox.saveNote(message);
+        status.textContent = `Saved note #${savedNote.id}.`;
+      } else {
+        const updatedNote = await window.thinkbox.updateNote(editingNoteId, message);
+        await loadNotes();
+        status.textContent = `Updated note #${updatedNote.id}.`;
+      }
+
       note.value = '';
       note.focus();
+      resetComposerToCreateMode();
     } catch (error) {
-      const messageText = error instanceof Error ? error.message : 'Failed to save note.';
+      const fallbackMessage =
+        editingNoteId === null ? 'Failed to save note.' : 'Failed to update note.';
+      const messageText = error instanceof Error ? error.message : fallbackMessage;
       status.textContent = messageText;
     } finally {
       sendButton.disabled = false;
@@ -188,6 +253,23 @@ if (notesBody && status) {
   notesBody.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof Element)) {
+      return;
+    }
+
+    const modifyButton = target.closest<HTMLButtonElement>('button.modify-note-btn');
+    if (modifyButton) {
+      const noteIdText = modifyButton.dataset.noteId;
+      const noteId = noteIdText ? Number(noteIdText) : NaN;
+      if (!Number.isInteger(noteId) || noteId <= 0) {
+        status.textContent = 'Invalid note id.';
+        return;
+      }
+
+      const row = modifyButton.closest('tr');
+      const contentCell = row?.querySelector<HTMLTableCellElement>('td.note-content-cell');
+      const currentContent = contentCell?.textContent ?? '';
+      setComposerToEditMode(noteId, currentContent);
+
       return;
     }
 

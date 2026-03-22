@@ -62,7 +62,7 @@ textarea {
   vertical-align: top;
 }
 
-.delete-note-btn {
+.note-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -74,12 +74,15 @@ textarea {
   cursor: pointer;
 }
 
-.delete-note-btn img {
+.modify-note-btn {
+  margin-right: 0.4rem;
+}
+
+.note-action-btn img {
   width: 1rem;
   height: 1rem;
 }
 
-.delete-note-btn:hover {
+.note-action-btn:hover {
   background: #f3f3f3;
 }
-

@@ -75,6 +75,53 @@ ipcMain.handle('notes:save', async (_event, content: unknown): Promise<savedNote
   };
 });
 
+ipcMain.handle('notes:update', async (_event,noteId: unknown,content: unknown,
+  ): Promise<savedNote> => {
+    if (typeof noteId !== 'number' || !Number.isInteger(noteId) || noteId <= 0) {
+      throw new Error('Invalid note id.');
+    }
+
+    if (typeof content !== 'string') {
+      throw new Error('Invalid note content.');
+    }
+
+    const trimmedContent = content.trim();
+    if (!trimmedContent) {
+      throw new Error('Please write something before saving.');
+    }
+
+    const db = await getDb();
+    const updateResult = await db.run(
+      `
+        UPDATE notes
+        SET content = ?, modified_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      trimmedContent,
+      noteId,
+    );
+
+    if (updateResult.changes === 0) {
+      throw new Error(`Note #${noteId} was not found.`);
+    }
+
+    const updatedNote = await db.get<{ id: number; content: string; created_at: string }>(
+      'SELECT id, content, created_at FROM notes WHERE id = ?',
+      noteId,
+    );
+
+    if (!updatedNote) {
+      throw new Error('Failed to update note.');
+    }
+
+    return {
+      id: updatedNote.id,
+      content: updatedNote.content,
+      createdAt: updatedNote.created_at,
+    };
+  },
+);
+
 ipcMain.handle('notes:show', async (): Promise<savedNote[]> => {
   const db = await getDb();
   const rows = await db.all<Array<{ id: number; content: string; created_at: string }>>(

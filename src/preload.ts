@@ -31,6 +31,8 @@ type savedReminder = {
 
 contextBridge.exposeInMainWorld('thinkbox', {
   saveNote: (content: string): Promise<SavedNote> => ipcRenderer.invoke('notes:save', content),
+  updateNote: (noteId: number, content: string): Promise<SavedNote> =>
+    ipcRenderer.invoke('notes:update', noteId, content),
   showNote: (): Promise<SavedNote[]> => ipcRenderer.invoke('notes:show'),
   deleteNote: (noteId: number): Promise<{ deleted: boolean }> =>
     ipcRenderer.invoke('notes:delete', noteId),

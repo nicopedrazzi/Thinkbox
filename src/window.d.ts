@@ -33,6 +33,7 @@ interface ThinkboxApi {
   deleteNote: (noteId: number) => Promise<{ deleted: boolean }>;
   generateNote: () => Promise<GeneratedReminder[]>;
   showReminders: () => Promise<SavedReminder[]>;
+  modifyReminders: () => Promise<>
 }
 
 interface Window {
