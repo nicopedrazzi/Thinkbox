@@ -1,6 +1,7 @@
 
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { defaultModel, ensureModelRuntimeReady, MODEL_BASE_URL } from './modelStuff';
 
 type NoteClassification = {
   category: 'work' | 'personal' | 'shopping' | 'idea' | 'todo' | 'other';
@@ -35,14 +36,16 @@ export async function classifyWithLocalModel(content: string): Promise<NoteClass
     throw new Error('Cannot classify an empty note.');
   }
 
+  await ensureModelRuntimeReady();
+
   const prompt = await promptPromise;
   const finalPrompt = `${prompt}\n\nClassify this note:\n${noteText}`;
 
-  const response = await fetch('http://localhost:11434/api/generate', {
+  const response = await fetch(`${MODEL_BASE_URL}/api/generate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'qwen2.5:3b',
+      model: defaultModel,
       prompt: finalPrompt,
       stream: false,
       format: 'json',
