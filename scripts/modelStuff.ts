@@ -96,7 +96,7 @@ export async function startModel(command = 'ollama'): Promise<void> {
     child.once('spawn', () => resolve());
     child.once('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') {
-        reject(new Error(`Could not find "${command}". Install Ollama or pass a valid command.`));
+        reject(new Error(`Could not find "${command}".`));
         return;
       }
       reject(new Error(`Failed to launch model runtime: ${error.message}`));

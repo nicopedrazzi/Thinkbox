@@ -2,6 +2,7 @@ import path from 'node:path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { initDb } from '../db/dbIndex';
 import { classifyWithLocalModel } from '../scripts/aiScript';
+import { stopModelRuntime } from '../scripts/modelStuff';
 
 type savedNote = {
   id: number;
@@ -153,50 +154,54 @@ ipcMain.handle('notes:delete', async (_event, noteId: unknown): Promise<{ delete
 
 
 ipcMain.handle('notes:generate', async (): Promise<GeneratedReminder[]> => {
-  const db = await getDb();
-  const notesWithoutReminders = await db.all<Array<{ id: number; content: string }>>(
-    `
-      SELECT n.id, n.content
-      FROM notes AS n
-      LEFT JOIN reminders AS r ON r.note_id = n.id
-      WHERE r.note_id IS NULL
-      ORDER BY n.id ASC
-    `,
-  );
-
-  const generatedReminders: GeneratedReminder[] = [];
-
-  for (const note of notesWithoutReminders) {
-    const reminder = await classifyWithLocalModel(note.content);
-
-    await db.run(
+  try {
+    const db = await getDb();
+    const notesWithoutReminders = await db.all<Array<{ id: number; content: string }>>(
       `
-        INSERT INTO reminders (
-          note_id,
-          category,
-          should_create_reminder,
-          reminder_title,
-          reminder_text,
-          reminder_date,
-          priority
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        SELECT n.id, n.content
+        FROM notes AS n
+        LEFT JOIN reminders AS r ON r.note_id = n.id
+        WHERE r.note_id IS NULL
+        ORDER BY n.id ASC
       `,
-      note.id,
-      reminder.category,
-      reminder.shouldCreateReminder ? 1 : 0,
-      reminder.reminderTitle,
-      reminder.reminderText,
-      reminder.reminderDate,
-      reminder.priority,
     );
 
-    generatedReminders.push({
-      noteId: note.id,
-      ...reminder,
-    });
-  }
+    const generatedReminders: GeneratedReminder[] = [];
 
-  return generatedReminders;
+    for (const note of notesWithoutReminders) {
+      const reminder = await classifyWithLocalModel(note.content);
+
+      await db.run(
+        `
+          INSERT INTO reminders (
+            note_id,
+            category,
+            should_create_reminder,
+            reminder_title,
+            reminder_text,
+            reminder_date,
+            priority
+          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+        note.id,
+        reminder.category,
+        reminder.shouldCreateReminder ? 1 : 0,
+        reminder.reminderTitle,
+        reminder.reminderText,
+        reminder.reminderDate,
+        reminder.priority,
+      );
+
+      generatedReminders.push({
+        noteId: note.id,
+        ...reminder,
+      });
+    }
+
+    return generatedReminders;
+  } finally {
+    stopModelRuntime();
+  }
 });
 
 ipcMain.handle('reminders:show', async (): Promise<savedReminder[]> => {
@@ -264,6 +269,8 @@ app
   });
 
 app.on('before-quit', () => {
+  stopModelRuntime();
+
   if (!dbPromise) {
     return;
   }
