@@ -2,6 +2,10 @@
 
 ThinkBox is a desktop note-taking app that turns your notes into structured reminders using a local AI model.
 
+## Motivation
+
+My project is an app that lets you write quick notes and come back later, for example I use it while working if something passes trough my mind like : "shoooooot I have to water my plants", I write it there. The cool thing, at least for me, is that I integrated a model, qwen2.5:3b to classify the notes into actual reminders or todo list. This makes organizie my random thoughts even easier, cleaner and faster.
+
 
 ## Features
 
@@ -72,6 +76,12 @@ This is version 1, still a bit rusty. I have planned a switch to react in the ne
 You are welcome to contribute or contact me for collaboration. I don't plan to use this commercially, is just a fun little project that helps in my everyday life.
 
 Please if you want to collaborate, I ask not to submit AI slop. 
+
+
+### Submit a pull request
+
+If you'd like to contribute, please fork the repository and open a pull request to the `main` branch.
+
 
 ## License
 
