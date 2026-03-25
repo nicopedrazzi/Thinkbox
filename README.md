@@ -7,6 +7,29 @@ ThinkBox is a desktop note-taking app that turns your notes into structured remi
 My project is an app that lets you write quick notes and come back later, for example I use it while working if something passes trough my mind like : "shoooooot I have to water my plants", I write it there. The cool thing, at least for me, is that I integrated a model, qwen2.5:3b to classify the notes into actual reminders or todo list. This makes organizie my random thoughts even easier, cleaner and faster.
 
 
+
+## Quick Start
+
+1. You write notes in the app (everything that pops up in your mind, even when you're working!)
+2. Notes are stored in a local SQLite database.
+3. On "Generate reminders", ThinkBox sends each unprocessed note to the local model.
+4. The model returns structured JSON (category, priority, reminder fields).
+5. The app saves and displays generated reminders.
+
+The use of the LLM is not mandatory, is just a nice feature I needed since my notes are super caothic. I use this app while I work or do something else. Is nice to write down a thought that quickly passes trough your mind so you can remind it at the end of the day.
+
+
+
+## Prerequisites
+
+- Node.js 18+ (recommended 20+)
+- npm
+- Ollama installed and available in your shell (`ollama`)
+- Local model pulled:
+
+```bash
+ollama pull qwen2.5:3b
+```
 ## Features
 
 WHat you can do now:
@@ -23,28 +46,6 @@ WHat you can do now:
 - SQLite (`sqlite` + `sqlite3`)
 - Ollama (local runtime)
 - Model: `qwen2.5:3b`
-
-## How It Works
-
-1. You write notes in the app (everything that pops up in your mind, even when you're working!)
-2. Notes are stored in a local SQLite database.
-3. On "Generate reminders", ThinkBox sends each unprocessed note to the local model.
-4. The model returns structured JSON (category, priority, reminder fields).
-5. The app saves and displays generated reminders.
-
-The use of the LLM is not mandatory, is just a nice feature I needed since my notes are super caothic. I use this app while I work or do something else. Is nice to write down a thought that quickly passes trough your mind so you can remind it at the end of the day.
-
-
-## Prerequisites
-
-- Node.js 18+ (recommended 20+)
-- npm
-- Ollama installed and available in your shell (`ollama`)
-- Local model pulled:
-
-```bash
-ollama pull qwen2.5:3b
-```
 
 ## Getting Started
 
