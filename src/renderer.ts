@@ -4,18 +4,19 @@ import modifyIcon from './assets/modify.svg';
 
 const note = document.querySelector<HTMLTextAreaElement>('#note');
 const sendButton = document.querySelector<HTMLButtonElement>('#send-btn');
-const showButton = document.querySelector<HTMLButtonElement>('#show-btn');
 const status = document.querySelector<HTMLParagraphElement>('#status');
-const notesBody = document.querySelector<HTMLTableSectionElement>('#notes-tbody');
-const remindersBody = document.querySelector<HTMLTableSectionElement>('#reminders-tbody');
+const notesList = document.querySelector<HTMLElement>('#notes-list');
+const remindersList = document.querySelector<HTMLElement>('#reminders-list');
+const notesCount = document.querySelector<HTMLElement>('#notes-count');
 const aiGeneratorBtn = document.querySelector<HTMLButtonElement>('#gen-btn');
+
 let editingNoteId: number | null = null;
 
 const resetComposerToCreateMode = () => {
   editingNoteId = null;
 
   if (sendButton) {
-    sendButton.textContent = 'Send';
+    sendButton.textContent = 'Save note';
   }
 };
 
@@ -32,40 +33,62 @@ const setComposerToEditMode = (noteId: number, content: string) => {
 };
 
 const formatDate = (isoDate: string): string => new Date(isoDate).toLocaleString();
+
 const formatReminderDate = (isoDate: string | null): string => {
   if (!isoDate) {
-    return '—';
+    return 'No date';
   }
+
   const parsedDate = new Date(isoDate);
   return Number.isNaN(parsedDate.getTime()) ? isoDate : parsedDate.toLocaleString();
 };
 
+const capitalize = (value: string): string => {
+  if (!value) {
+    return value;
+  }
+
+  return value[0].toUpperCase() + value.slice(1);
+};
+
 const renderNotes = (savedNotes: SavedNote[]) => {
-  if (!notesBody) {
+  if (!notesList) {
     return;
   }
 
-  notesBody.innerHTML = '';
+  notesList.innerHTML = '';
 
-  for (const savedNote of savedNotes) {
-    const row = document.createElement('tr');
+  if (notesCount) {
+    notesCount.textContent = `${savedNotes.length} captured`;
+  }
 
-    const idCell = document.createElement('td');
-    idCell.textContent = String(savedNote.id);
+  if (savedNotes.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'No notes yet. Write your first note above.';
+    notesList.append(empty);
+    return;
+  }
 
-    const contentCell = document.createElement('td');
-    contentCell.className = 'note-content-cell';
-    contentCell.textContent = savedNote.content;
+  for (const [index, savedNote] of savedNotes.entries()) {
+    const card = document.createElement('article');
+    card.className = `note-card gradient-${(index % 3) + 1}`;
 
-    const createdAtCell = document.createElement('td');
-    createdAtCell.textContent = formatDate(savedNote.createdAt);
+    const top = document.createElement('div');
+    top.className = 'note-top';
 
-    const actionsCell = document.createElement('td');
+    const text = document.createElement('p');
+    text.className = 'note-text';
+    text.textContent = savedNote.content;
+
+    const actions = document.createElement('div');
+    actions.className = 'note-actions';
 
     const modifyButton = document.createElement('button');
     modifyButton.type = 'button';
     modifyButton.className = 'note-action-btn modify-note-btn';
     modifyButton.dataset.noteId = String(savedNote.id);
+    modifyButton.dataset.noteContent = savedNote.content;
     modifyButton.setAttribute('aria-label', `Modify note ${savedNote.id}`);
 
     const modifyImage = document.createElement('img');
@@ -84,37 +107,59 @@ const renderNotes = (savedNotes: SavedNote[]) => {
     deleteImage.alt = '';
     deleteButton.append(deleteImage);
 
-    actionsCell.append(modifyButton, deleteButton);
-    row.append(idCell, contentCell, createdAtCell, actionsCell);
-    notesBody.append(row);
+    actions.append(modifyButton, deleteButton);
+    top.append(text, actions);
+
+    const meta = document.createElement('div');
+    meta.className = 'note-meta';
+
+    const idPill = document.createElement('span');
+    idPill.className = 'pill';
+    idPill.textContent = `Note #${savedNote.id}`;
+
+    const createdAt = document.createElement('span');
+    createdAt.textContent = formatDate(savedNote.createdAt);
+
+    meta.append(idPill, createdAt);
+    card.append(top, meta);
+    notesList.append(card);
   }
 };
 
 const renderReminders = (savedReminders: SavedReminder[]) => {
-  if (!remindersBody) {
+  if (!remindersList) {
     return;
   }
 
-  remindersBody.innerHTML = '';
+  remindersList.innerHTML = '';
+
+  if (savedReminders.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'No reminders generated yet.';
+    remindersList.append(empty);
+    return;
+  }
 
   for (const reminder of savedReminders) {
-    const row = document.createElement('tr');
-    const reminderText = reminder.reminderText ?? '';
-    const reminderTitle = reminder.reminderTitle ?? '—';
-    const noteIdLabel = reminder.noteId === null ? '—' : String(reminder.noteId);
+    const card = document.createElement('article');
+    card.className = 'reminder-card';
 
-    row.innerHTML = `
-      <td>${noteIdLabel}</td>
-      <td>${reminder.category}</td>
-      <td>${reminder.priority}</td>
-      <td>
-        <strong>${reminderTitle}</strong>
-        ${reminderText ? `<div>${reminderText}</div>` : ''}
-      </td>
-      <td>${formatReminderDate(reminder.reminderDate)}</td>
-    `;
+    const priority = document.createElement('div');
+    priority.className = `priority ${reminder.priority === 'high' ? 'high' : reminder.priority === 'low' ? 'low' : ''}`.trim();
 
-    remindersBody.append(row);
+    const main = document.createElement('div');
+    main.className = 'reminder-main';
+
+    const title = document.createElement('h4');
+    title.textContent = reminder.reminderTitle ?? reminder.noteContent ?? 'Untitled reminder';
+
+    const summary = document.createElement('p');
+    summary.textContent = `${formatReminderDate(reminder.reminderDate)} · ${capitalize(reminder.priority)} priority`;
+
+    main.append(title, summary);
+    card.append(priority, main);
+    remindersList.append(card);
   }
 };
 
@@ -123,12 +168,9 @@ const loadNotes = async () => {
     return;
   }
 
-  status.textContent = "Loading today's notes...";
-
   try {
     const savedNotes = await window.thinkbox.showNote();
     renderNotes(savedNotes);
-    status.textContent = `Loaded ${savedNotes.length} note(s).`;
   } catch (error) {
     const messageText = error instanceof Error ? error.message : 'Failed to load notes.';
     status.textContent = messageText;
@@ -173,13 +215,13 @@ if (note && sendButton && status) {
         status.textContent = `Saved note #${savedNote.id}.`;
       } else {
         const updatedNote = await window.thinkbox.updateNote(editingNoteId, message);
-        await loadNotes();
         status.textContent = `Updated note #${updatedNote.id}.`;
       }
 
       note.value = '';
       note.focus();
       resetComposerToCreateMode();
+      await loadNotes();
     } catch (error) {
       const fallbackMessage =
         editingNoteId === null ? 'Failed to save note.' : 'Failed to update note.';
@@ -202,23 +244,10 @@ if (note && sendButton && status) {
   });
 }
 
-if (showButton && status) {
-  const showNote = async () => {
-    showButton.disabled = true;
-    await loadNotes();
-    await loadReminders();
-    showButton.disabled = false;
-  };
-
-  showButton.addEventListener('click', () => {
-    void showNote();
-  });
-}
-
 if (aiGeneratorBtn && status) {
   const generateReminders = async () => {
     aiGeneratorBtn.disabled = true;
-    status.textContent = 'Creating reminders…';
+    status.textContent = 'Creating reminders...';
 
     try {
       const reminders = await window.thinkbox.generateNote();
@@ -249,8 +278,8 @@ if (status) {
   void loadReminders();
 }
 
-if (notesBody && status) {
-  notesBody.addEventListener('click', (event) => {
+if (notesList && status) {
+  notesList.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof Element)) {
       return;
@@ -265,11 +294,8 @@ if (notesBody && status) {
         return;
       }
 
-      const row = modifyButton.closest('tr');
-      const contentCell = row?.querySelector<HTMLTableCellElement>('td.note-content-cell');
-      const currentContent = contentCell?.textContent ?? '';
+      const currentContent = modifyButton.dataset.noteContent ?? '';
       setComposerToEditMode(noteId, currentContent);
-
       return;
     }
 

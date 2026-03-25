@@ -1,50 +1,84 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ThinkBox</title>
-
   </head>
   <body>
-    <h1>Think Box</h1>
-    <h2 class="subtitle">Write your current thought and come back later!</h2>
-    <label for="note">Write something:</label>
-    <textarea id="note" placeholder="Type here..."></textarea>
-    <button id="send-btn" type="button">Send</button>
-    <button id="show-btn" type="button">Show today's notes</button>
-    <button id="gen-btn" type="button">Generate reminders</button>
+    <main class="window">
+      <header class="topbar">
+        <div class="traffic" aria-hidden="true">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
 
-    <p id="status" aria-live="polite"></p>
-    <section class="notes-box">
-  <h3>Saved Notes</h3>
-  <table class="notes-table" id="notes-table">
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>Content</th>
-        <th>Created</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="notes-tbody"></tbody>
-  </table>
-</section>
+        <div class="brand">
+          <div class="brand-icon">✦</div>
+          <span>Thinkbox</span>
+        </div>
 
-    <section class="notes-box">
-  <h3>Generated Reminders</h3>
-  <table class="notes-table" id="reminders-table">
-    <thead>
-      <tr>
-        <th>Note ID</th>
-        <th>Category</th>
-        <th>Priority</th>
-        <th>Reminder</th>
-        <th>When</th>
-      </tr>
-    </thead>
-    <tbody id="reminders-tbody"></tbody>
-  </table>
-</section>
+        <div class="status-chip">Quick Capture</div>
+      </header>
+
+      <section class="content">
+        <section class="hero">
+          <h1>Home for passing thoughts.</h1>
+          <p>
+            Capture something now, turn it into an Apple-style reminder later, and keep the
+            interface fast enough to open, type, and close in seconds.
+          </p>
+        </section>
+
+        <section class="input-card">
+          <div class="input-wrap">
+            <div class="spark" aria-hidden="true">✎</div>
+            <div class="input-main">
+              <textarea id="note" placeholder="What’s on your mind right now? e.g. I need to water plants later"></textarea>
+              <div class="input-footer">
+                <span class="hint">Press Enter to save quickly</span>
+                <button id="send-btn" class="btn btn-primary" type="button">Save note</button>
+              </div>
+            </div>
+          </div>
+          <p id="status" aria-live="polite"></p>
+        </section>
+
+        <div class="section-title">
+          <h2>Current notes</h2>
+          <span id="notes-count">0 captured</span>
+        </div>
+
+        <section id="notes-list" class="notes"></section>
+
+        <div class="actions-grid">
+          <article class="action-card">
+            <h3>Show todolist</h3>
+            <p>Open the detached list window with reminders and mark items as done.</p>
+            <button class="btn btn-soft" type="button" disabled>Open list (soon)</button>
+          </article>
+
+          <article class="action-card">
+            <h3>Generate reminders</h3>
+            <p>Turn free-form thoughts into clean, Apple-style tasks with timing.</p>
+            <button id="gen-btn" class="btn btn-accent" type="button">Generate</button>
+          </article>
+        </div>
+
+        <div class="section-title">
+          <h2>Generated reminders</h2>
+          <span>Preview</span>
+        </div>
+
+        <section id="reminders-list" class="reminders"></section>
+
+        <div class="footer-actions">
+          <button class="btn ghost" type="button" disabled>Add to Apple Reminders (soon)</button>
+          <button class="btn solid" type="button" disabled>Add to Calendar (soon)</button>
+        </div>
+      </section>
+    </main>
 
     <script type="module" src="/src/renderer.ts"></script>
   </body>

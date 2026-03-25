@@ -29,11 +29,11 @@ type SavedReminder = {
 
 interface ThinkboxApi {
   saveNote: (content: string) => Promise<SavedNote>;
+  updateNote: (noteId: number, content: string) => Promise<SavedNote>;
   showNote: () => Promise<SavedNote[]>;
   deleteNote: (noteId: number) => Promise<{ deleted: boolean }>;
   generateNote: () => Promise<GeneratedReminder[]>;
   showReminders: () => Promise<SavedReminder[]>;
-  modifyReminders: () => Promise<>
 }
 
 interface Window {

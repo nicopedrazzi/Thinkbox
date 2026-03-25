@@ -34,8 +34,10 @@ const getDb = () => dbPromise ??= initDb();
 
 const createWindow = () => {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 430,
+    height: 900,
+    minWidth: 430,
+    minHeight: 760,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
