@@ -47,7 +47,7 @@ WHat you can do now:
 - Ollama (local runtime)
 - Model: `qwen2.5:3b`
 
-## Getting Started
+## Usage
 
 ```bash
 npm install
@@ -78,7 +78,7 @@ You are welcome to contribute or contact me for collaboration. I don't plan to u
 
 Please if you want to collaborate, I ask not to submit AI slop. 
 
-
+## Contributing
 ### Submit a pull request
 
 If you'd like to contribute, please fork the repository and open a pull request to the `main` branch.
