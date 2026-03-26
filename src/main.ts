@@ -27,6 +27,20 @@ type savedReminder = {
   createdAt: string;
 };
 
+type savedTodo = {
+  id: number;
+  noteId: number | null;
+  noteContent: string | null;
+  isCompleted: boolean;
+  category: GeneratedReminder['category'];
+  shouldCreateReminder: boolean;
+  reminderTitle: string | null;
+  reminderText: string | null;
+  reminderDate: string | null;
+  priority: GeneratedReminder['priority'];
+  createdAt: string;
+};
+
 let dbPromise: ReturnType<typeof initDb> | undefined;
 
 const getDb = () => dbPromise ??= initDb();
@@ -242,6 +256,89 @@ ipcMain.handle('reminders:show', async (): Promise<savedReminder[]> => {
     id: row.id,
     noteId: row.note_id,
     noteContent: row.note_content,
+    category: row.category,
+    shouldCreateReminder: row.should_create_reminder === 1,
+    reminderTitle: row.reminder_title,
+    reminderText: row.reminder_text,
+    reminderDate: row.reminder_date,
+    priority: row.priority,
+    createdAt: row.created_at,
+  }));
+});
+
+ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
+  const db = await getDb();
+
+  await db.run(
+    `
+      INSERT INTO todos (
+        note_id,
+        is_completed,
+        category,
+        should_create_reminder,
+        reminder_title,
+        reminder_text,
+        reminder_date,
+        priority
+      )
+      SELECT
+        r.note_id,
+        0,
+        r.category,
+        r.should_create_reminder,
+        r.reminder_title,
+        r.reminder_text,
+        r.reminder_date,
+        r.priority
+      FROM reminders AS r
+      WHERE r.should_create_reminder = 1
+        AND r.note_id IS NOT NULL
+        AND NOT EXISTS (
+          SELECT 1
+          FROM todos AS t
+          WHERE t.note_id = r.note_id
+        )
+    `,
+  );
+
+  const rows = await db.all<Array<{
+    id: number;
+    note_id: number | null;
+    note_content: string | null;
+    is_completed: number | null;
+    category: GeneratedReminder['category'];
+    should_create_reminder: number;
+    reminder_title: string | null;
+    reminder_text: string | null;
+    reminder_date: string | null;
+    priority: GeneratedReminder['priority'];
+    created_at: string;
+  }>>(
+    `
+      SELECT
+        t.id,
+        t.note_id,
+        n.content AS note_content,
+        COALESCE(t.is_completed, 0) AS is_completed,
+        t.category,
+        t.should_create_reminder,
+        t.reminder_title,
+        t.reminder_text,
+        t.reminder_date,
+        t.priority,
+        t.created_at
+      FROM todos AS t
+      LEFT JOIN notes AS n ON n.id = t.note_id
+      WHERE COALESCE(t.is_completed, 0) = 0
+      ORDER BY t.id DESC
+    `,
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    noteId: row.note_id,
+    noteContent: row.note_content,
+    isCompleted: row.is_completed === 1,
     category: row.category,
     shouldCreateReminder: row.should_create_reminder === 1,
     reminderTitle: row.reminder_title,
