@@ -4,8 +4,11 @@ ThinkBox is a desktop note-taking app that turns your notes into structured remi
 
 ## Motivation
 
-My project is an app that lets you write quick notes and come back later, for example I use it while working if something passes trough my mind like : "shoooooot I have to water my plants", I write it there. The cool thing, at least for me, is that I integrated a model, qwen2.5:3b to classify the notes into actual reminders or todo list. This makes organizie my random thoughts even easier, cleaner and faster.
+I built this app to make it easy to capture quick thoughts before they disappear. During the day, I often have small reminders pop into my head like “I need to water my plants,” but they are usually too low-priority for me to stop what I’m doing and properly organize. If I do not write them down immediately, I forget them.
 
+This app solves that problem by giving me a lightweight place to quickly store those random thoughts and come back to them later. What makes it especially useful is that I integrated a Qwen2.5:3B model to classify notes into actual reminders or to-do items automatically. That makes organizing messy, spontaneous thoughts much faster and cleaner.
+
+The current tech stack is Electron, TypeScript, and SQLite. Over time, I plan to extend it with a more personalized model trained in Python with scikit-learn, using Apple-style reminders as training data. For now, the LLM handles most of the heavy lifting
 
 
 ## Quick Start
