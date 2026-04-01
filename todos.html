@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ThinkBox Todo List</title>
+  </head>
+  <body>
+    <main class="todos-window">
+      <header class="todos-header">
+        <div>
+          <h1>Todo list</h1>
+          <p>Pending items auto-created from reminders.</p>
+        </div>
+        <button id="refresh-todos-btn" class="todos-btn" type="button">Refresh</button>
+      </header>
+
+      <p id="todos-status" aria-live="polite"></p>
+      <section id="todos-list" class="todos-list"></section>
+    </main>
+
+    <script type="module" src="/src/todosRenderer.ts"></script>
+  </body>
+</html>

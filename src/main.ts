@@ -42,6 +42,7 @@ type savedTodo = {
 };
 
 let dbPromise: ReturnType<typeof initDb> | undefined;
+let todosWindow: BrowserWindow | null = null;
 
 const getDb = () => dbPromise ??= initDb();
 
@@ -62,6 +63,42 @@ const createWindow = () => {
   } else {
     void win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+};
+
+const createTodosWindow = (): BrowserWindow => {
+  if (todosWindow && !todosWindow.isDestroyed()) {
+    return todosWindow;
+  }
+
+  const win = new BrowserWindow({
+    width: 420,
+    height: 720,
+    minWidth: 360,
+    minHeight: 540,
+    show: false,
+    title: 'ThinkBox Todo List',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+    },
+  });
+
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    const todosUrl = new URL('todos.html', `${MAIN_WINDOW_VITE_DEV_SERVER_URL}/`).toString();
+    void win.loadURL(todosUrl);
+  } else {
+    void win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/todos.html`));
+  }
+
+  win.once('ready-to-show', () => {
+    win.show();
+  });
+
+  win.on('closed', () => {
+    todosWindow = null;
+  });
+
+  todosWindow = win;
+  return win;
 };
 
 ipcMain.handle('notes:save', async (_event, content: unknown): Promise<savedNote> => {
@@ -347,6 +384,19 @@ ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
     priority: row.priority,
     createdAt: row.created_at,
   }));
+});
+
+ipcMain.handle('todos:window:show', async (): Promise<{ shown: boolean }> => {
+  const win = createTodosWindow();
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+
+  win.show();
+  win.focus();
+
+  return { shown: true };
 });
 
 

@@ -49,6 +49,7 @@ interface ThinkboxApi {
   generateNote: () => Promise<GeneratedReminder[]>;
   showReminders: () => Promise<SavedReminder[]>;
   showTodos: () => Promise<SavedTodo[]>;
+  showTodosWindow: () => Promise<{ shown: boolean }>;
 }
 
 interface Window {

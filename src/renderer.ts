@@ -9,6 +9,7 @@ const notesList = document.querySelector<HTMLElement>('#notes-list');
 const remindersList = document.querySelector<HTMLElement>('#reminders-list');
 const notesCount = document.querySelector<HTMLElement>('#notes-count');
 const aiGeneratorBtn = document.querySelector<HTMLButtonElement>('#gen-btn');
+const openTodosBtn = document.querySelector<HTMLButtonElement>('#open-todos-btn');
 
 let editingNoteId: number | null = null;
 
@@ -270,6 +271,25 @@ if (aiGeneratorBtn && status) {
 
   aiGeneratorBtn.addEventListener('click', () => {
     void generateReminders();
+  });
+}
+
+if (openTodosBtn && status) {
+  openTodosBtn.addEventListener('click', () => {
+    void (async () => {
+      openTodosBtn.disabled = true;
+      status.textContent = 'Opening todo list...';
+
+      try {
+        await window.thinkbox.showTodosWindow();
+        status.textContent = 'Todo list opened.';
+      } catch (error) {
+        status.textContent =
+          error instanceof Error ? error.message : 'Failed to open todo list.';
+      } finally {
+        openTodosBtn.disabled = false;
+      }
+    })();
   });
 }
 

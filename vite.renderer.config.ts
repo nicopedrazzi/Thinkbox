@@ -8,4 +8,12 @@ export default defineConfig({
   preview: {
     host: '127.0.0.1',
   },
+  build: {
+    rollupOptions: {
+      input: {
+        main: 'index.html',
+        todos: 'todos.html',
+      },
+    },
+  },
 });

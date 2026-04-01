@@ -53,4 +53,5 @@ contextBridge.exposeInMainWorld('thinkbox', {
   generateNote: (): Promise<generatedNote[]> => ipcRenderer.invoke('notes:generate'),
   showReminders: (): Promise<savedReminder[]> => ipcRenderer.invoke('reminders:show'),
   showTodos: (): Promise<savedTodo[]> => ipcRenderer.invoke('todos:show'),
+  showTodosWindow: (): Promise<{ shown: boolean }> => ipcRenderer.invoke('todos:window:show'),
 });
