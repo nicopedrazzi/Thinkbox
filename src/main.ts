@@ -3,6 +3,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import { initDb } from '../db/dbIndex';
 import { classifyWithLocalModel } from '../scripts/aiScript';
 import { stopModelRuntime } from '../scripts/modelStuff';
+import { b } from 'vite/dist/node/types.d-aGj9QkWt';
 
 type savedNote = {
   id: number;
@@ -397,6 +398,21 @@ ipcMain.handle('todos:window:show', async (): Promise<{ shown: boolean }> => {
   win.focus();
 
   return { shown: true };
+});
+
+ipcMain.handle('todos:complete', async(_event, todoId: unknown): Promise <{completed: boolean}> => {
+  
+  const db = await getDb();
+  const result = await db.run(
+    `
+        UPDATE todos
+        SET is_completed = 1
+        WHERE id = ? AND COALESCE(is_completed, 0) = 0
+      `,
+      todoId,)
+    if (result.changes){
+    return {completed: result.changes > 0};}
+
 });
 
 
