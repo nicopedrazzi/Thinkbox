@@ -60,7 +60,14 @@ const renderTodos = (todos: SavedTodo[]) => {
     footer.className = 'todo-footer';
     footer.textContent = `Created ${formatDate(todo.createdAt)}${todo.noteId ? ` · Note #${todo.noteId}` : ''}`;
 
-    card.append(title, detail, meta, footer);
+    const completeBtn = document.createElement('button');
+    completeBtn.type = 'button';
+    completeBtn.className = 'todo-complete-btn';
+    completeBtn.dataset.todoId = String(todo.id);
+    completeBtn.textContent = 'Done';
+
+    card.append(title, detail, meta, footer, completeBtn);
+
     todosList.append(card);
   }
 };
