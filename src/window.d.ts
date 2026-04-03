@@ -27,6 +27,13 @@ type SavedReminder = {
   createdAt: string;
 };
 
+type ReminderUpdateInput = {
+  reminderTitle: string | null;
+  reminderText: string | null;
+  reminderDate: string | null;
+  priority: 'low' | 'medium' | 'high';
+};
+
 type SavedTodo = {
   id: number;
   noteId: number | null;
@@ -49,6 +56,8 @@ interface ThinkboxApi {
   deleteNote: (noteId: number) => Promise<{ deleted: boolean }>;
   generateNote: () => Promise<GeneratedReminder[]>;
   showReminders: () => Promise<SavedReminder[]>;
+  updateReminder: (reminderId: number, update: ReminderUpdateInput) => Promise<SavedReminder>;
+  deleteReminder: (reminderId: number) => Promise<{ deleted: boolean }>;
   showTodos: () => Promise<SavedTodo[]>;
   showTodosWindow: () => Promise<{ shown: boolean }>;
 }

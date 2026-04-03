@@ -29,6 +29,13 @@ type savedReminder = {
   createdAt: string;
 };
 
+type ReminderUpdateInput = {
+  reminderTitle: string | null;
+  reminderText: string | null;
+  reminderDate: string | null;
+  priority: "low"|"medium"|"high";
+};
+
 type savedTodo = {
   id: number;
   noteId: number | null;
@@ -52,6 +59,10 @@ contextBridge.exposeInMainWorld('thinkbox', {
     ipcRenderer.invoke('notes:delete', noteId),
   generateNote: (): Promise<generatedNote[]> => ipcRenderer.invoke('notes:generate'),
   showReminders: (): Promise<savedReminder[]> => ipcRenderer.invoke('reminders:show'),
+  updateReminder: (reminderId: number, update: ReminderUpdateInput): Promise<savedReminder> =>
+    ipcRenderer.invoke('reminders:update', reminderId, update),
+  deleteReminder: (reminderId: number): Promise<{ deleted: boolean }> =>
+    ipcRenderer.invoke('reminders:delete', reminderId),
   showTodos: (): Promise<savedTodo[]> => ipcRenderer.invoke('todos:show'),
   showTodosWindow: (): Promise<{ shown: boolean }> => ipcRenderer.invoke('todos:window:show'),
   markAsDone: (todoId: number): Promise<{ completed: boolean }> =>

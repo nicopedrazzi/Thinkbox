@@ -328,6 +328,10 @@ textarea::placeholder {
   border: 1px solid rgba(255, 255, 255, 0.74);
 }
 
+.reminder-card--editing {
+  align-items: flex-start;
+}
+
 .priority {
   width: 10px;
   height: 42px;
@@ -356,6 +360,96 @@ textarea::placeholder {
   margin: 0;
   font-size: 12px;
   color: var(--muted);
+}
+
+.reminder-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.reminder-actions--editing {
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reminder-action-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(95, 121, 255, 0.24);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.74);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.reminder-action-btn img {
+  width: 15px;
+  height: 15px;
+}
+
+.reminder-action-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.reminder-action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.reminder-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reminder-edit-input {
+  width: 100%;
+  border: 1px solid rgba(95, 121, 255, 0.2);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text);
+  font: inherit;
+  padding: 8px 10px;
+}
+
+.reminder-edit-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reminder-edit-text {
+  min-height: 60px;
+  resize: vertical;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.reminder-edit-date,
+.reminder-edit-priority {
+  font-size: 12px;
+}
+
+.reminder-text-btn {
+  width: auto;
+  min-width: 58px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.save-reminder-btn {
+  border-color: rgba(88, 214, 194, 0.55);
+  background: rgba(88, 214, 194, 0.22);
+}
+
+.cancel-reminder-btn {
+  border-color: rgba(126, 141, 190, 0.4);
+  background: rgba(255, 255, 255, 0.84);
 }
 
 .btn {

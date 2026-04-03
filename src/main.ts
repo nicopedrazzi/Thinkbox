@@ -41,6 +41,48 @@ type savedTodo = {
   createdAt: string;
 };
 
+type savedReminderRow = {
+  id: number;
+  note_id: number | null;
+  note_content: string | null;
+  category: GeneratedReminder['category'];
+  should_create_reminder: number;
+  reminder_title: string | null;
+  reminder_text: string | null;
+  reminder_date: string | null;
+  priority: GeneratedReminder['priority'];
+  created_at: string;
+};
+
+const toSavedReminder = (row: savedReminderRow): savedReminder => ({
+  id: row.id,
+  noteId: row.note_id,
+  noteContent: row.note_content,
+  category: row.category,
+  shouldCreateReminder: row.should_create_reminder === 1,
+  reminderTitle: row.reminder_title,
+  reminderText: row.reminder_text,
+  reminderDate: row.reminder_date,
+  priority: row.priority,
+  createdAt: row.created_at,
+});
+
+const isReminderPriority = (value: unknown): value is GeneratedReminder['priority'] =>
+  value === 'low' || value === 'medium' || value === 'high';
+
+const normalizeOptionalReminderField = (value: unknown, fieldName: string): string | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value !== 'string') {
+    throw new Error(`Invalid ${fieldName}.`);
+  }
+
+  const trimmed = value.trim();
+  return trimmed ? trimmed : null;
+};
+
 let dbPromise: ReturnType<typeof initDb> | undefined;
 let todosWindow: BrowserWindow | null = null;
 
@@ -259,18 +301,7 @@ ipcMain.handle('notes:generate', async (): Promise<GeneratedReminder[]> => {
 
 ipcMain.handle('reminders:show', async (): Promise<savedReminder[]> => {
   const db = await getDb();
-  const rows = await db.all<Array<{
-    id: number;
-    note_id: number | null;
-    note_content: string | null;
-    category: GeneratedReminder['category'];
-    should_create_reminder: number;
-    reminder_title: string | null;
-    reminder_text: string | null;
-    reminder_date: string | null;
-    priority: GeneratedReminder['priority'];
-    created_at: string;
-  }>>(
+  const rows = await db.all<savedReminderRow[]>(
     `
       SELECT
         r.id,
@@ -289,18 +320,120 @@ ipcMain.handle('reminders:show', async (): Promise<savedReminder[]> => {
     `,
   );
 
-  return rows.map((row) => ({
-    id: row.id,
-    noteId: row.note_id,
-    noteContent: row.note_content,
-    category: row.category,
-    shouldCreateReminder: row.should_create_reminder === 1,
-    reminderTitle: row.reminder_title,
-    reminderText: row.reminder_text,
-    reminderDate: row.reminder_date,
-    priority: row.priority,
-    createdAt: row.created_at,
-  }));
+  return rows.map(toSavedReminder);
+});
+
+ipcMain.handle('reminders:update', async (_event, reminderId: unknown, update: unknown): Promise<savedReminder> => {
+  if (typeof reminderId !== 'number' || !Number.isInteger(reminderId) || reminderId <= 0) {
+    throw new Error('Invalid reminder id.');
+  }
+
+  if (typeof update !== 'object' || update === null) {
+    throw new Error('Invalid reminder update.');
+  }
+
+  const payload = update as {
+    reminderTitle?: unknown;
+    reminderText?: unknown;
+    reminderDate?: unknown;
+    priority?: unknown;
+  };
+
+  const reminderTitle = normalizeOptionalReminderField(payload.reminderTitle, 'reminder title');
+  const reminderText = normalizeOptionalReminderField(payload.reminderText, 'reminder text');
+  const reminderDate = normalizeOptionalReminderField(payload.reminderDate, 'reminder date');
+
+  if (!isReminderPriority(payload.priority)) {
+    throw new Error('Invalid reminder priority.');
+  }
+
+  const db = await getDb();
+
+  const existingReminder = await db.get<{ note_id: number | null }>(
+    'SELECT note_id FROM reminders WHERE id = ?',
+    reminderId,
+  );
+  if (!existingReminder) {
+    throw new Error(`Reminder #${reminderId} was not found.`);
+  }
+
+  await db.run(
+    `
+      UPDATE reminders
+      SET reminder_title = ?, reminder_text = ?, reminder_date = ?, priority = ?
+      WHERE id = ?
+    `,
+    reminderTitle,
+    reminderText,
+    reminderDate,
+    payload.priority,
+    reminderId,
+  );
+
+  if (existingReminder.note_id !== null) {
+    await db.run(
+      `
+        UPDATE todos
+        SET reminder_title = ?, reminder_text = ?, reminder_date = ?, priority = ?
+        WHERE note_id = ? AND COALESCE(is_completed, 0) = 0
+      `,
+      reminderTitle,
+      reminderText,
+      reminderDate,
+      payload.priority,
+      existingReminder.note_id,
+    );
+  }
+
+  const updatedReminder = await db.get<savedReminderRow>(
+    `
+      SELECT
+        r.id,
+        r.note_id,
+        n.content AS note_content,
+        r.category,
+        r.should_create_reminder,
+        r.reminder_title,
+        r.reminder_text,
+        r.reminder_date,
+        r.priority,
+        r.created_at
+      FROM reminders AS r
+      LEFT JOIN notes AS n ON n.id = r.note_id
+      WHERE r.id = ?
+    `,
+    reminderId,
+  );
+
+  if (!updatedReminder) {
+    throw new Error('Failed to load updated reminder.');
+  }
+
+  return toSavedReminder(updatedReminder);
+});
+
+ipcMain.handle('reminders:delete', async (_event, reminderId: unknown): Promise<{ deleted: boolean }> => {
+  if (typeof reminderId !== 'number' || !Number.isInteger(reminderId) || reminderId <= 0) {
+    throw new Error('Invalid reminder id.');
+  }
+
+  const db = await getDb();
+  const existingReminder = await db.get<{ note_id: number | null }>(
+    'SELECT note_id FROM reminders WHERE id = ?',
+    reminderId,
+  );
+
+  if (!existingReminder) {
+    return { deleted: false };
+  }
+
+  await db.run('DELETE FROM reminders WHERE id = ?', reminderId);
+
+  if (existingReminder.note_id !== null) {
+    await db.run('DELETE FROM todos WHERE note_id = ?', existingReminder.note_id);
+  }
+
+  return { deleted: true };
 });
 
 ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
