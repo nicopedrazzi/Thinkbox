@@ -79,8 +79,16 @@ body {
   box-shadow: 0 8px 22px rgba(76, 100, 160, 0.08);
 }
 
+.todo-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
 .todo-card h2 {
-  margin: 0 0 8px;
+  margin: 0;
   font-size: 15px;
 }
 
@@ -100,6 +108,40 @@ body {
 
 .todo-footer {
   margin-top: 6px;
+}
+
+.todo-check-btn {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.todo-check-btn:hover:not(:disabled) {
+  background: #dfe9ff;
+}
+
+.todo-check-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.todo-card--completed {
+  opacity: 0.72;
+}
+
+.todo-card--completed h2,
+.todo-card--completed .todo-detail,
+.todo-card--completed .todo-meta,
+.todo-card--completed .todo-footer {
+  text-decoration: line-through;
 }
 
 .todos-empty {

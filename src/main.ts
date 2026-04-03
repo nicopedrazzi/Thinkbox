@@ -399,20 +399,22 @@ ipcMain.handle('todos:window:show', async (): Promise<{ shown: boolean }> => {
   return { shown: true };
 });
 
-ipcMain.handle('todos:complete', async(_event, todoId: unknown): Promise<{completed: boolean}> => {
-  
+ipcMain.handle('todos:complete', async (_event, todoId: unknown): Promise<{ completed: boolean }> => {
+  if (typeof todoId !== 'number' || !Number.isInteger(todoId) || todoId <= 0) {
+    throw new Error('Invalid todo id.');
+  }
+
   const db = await getDb();
   const result = await db.run(
     `
-        UPDATE todos
-        SET is_completed = 1
-        WHERE id = ? AND COALESCE(is_completed, 0) = 0
-      `,
-      todoId,)
-    if (result.changes){
-    return {completed: result.changes > 0};
-    }
-    return {completed: false};
+      UPDATE todos
+      SET is_completed = 1
+      WHERE id = ? AND COALESCE(is_completed, 0) = 0
+    `,
+    todoId,
+  );
+
+  return { completed: (result.changes ?? 0) > 0 };
 });
 
 

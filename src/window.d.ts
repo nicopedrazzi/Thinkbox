@@ -50,6 +50,7 @@ interface ThinkboxApi {
   showReminders: () => Promise<SavedReminder[]>;
   showTodos: () => Promise<SavedTodo[]>;
   showTodosWindow: () => Promise<{ shown: boolean }>;
+  markAsDone: (todoId: number) => Promise<{ completed: boolean }>;
 }
 
 interface Window {

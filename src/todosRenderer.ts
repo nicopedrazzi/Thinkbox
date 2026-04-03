@@ -45,8 +45,20 @@ const renderTodos = (todos: SavedTodo[]) => {
     const card = document.createElement('article');
     card.className = 'todo-card';
 
+    const top = document.createElement('div');
+    top.className = 'todo-top';
+
     const title = document.createElement('h2');
     title.textContent = todo.reminderTitle ?? todo.noteContent ?? 'Untitled todo';
+
+    const completeBtn = document.createElement('button');
+    completeBtn.type = 'button';
+    completeBtn.className = 'todo-check-btn';
+    completeBtn.dataset.todoId = String(todo.id);
+    completeBtn.setAttribute('aria-label', `Mark todo ${todo.id} as done`);
+    completeBtn.textContent = '✓';
+
+    top.append(title, completeBtn);
 
     const detail = document.createElement('p');
     detail.className = 'todo-detail';
@@ -60,13 +72,7 @@ const renderTodos = (todos: SavedTodo[]) => {
     footer.className = 'todo-footer';
     footer.textContent = `Created ${formatDate(todo.createdAt)}${todo.noteId ? ` · Note #${todo.noteId}` : ''}`;
 
-    const completeBtn = document.createElement('button');
-    completeBtn.type = 'button';
-    completeBtn.className = 'todo-complete-btn';
-    completeBtn.dataset.todoId = String(todo.id);
-    completeBtn.textContent = 'Done';
-
-    card.append(title, detail, meta, footer, completeBtn);
+    card.append(top, detail, meta, footer);
 
     todosList.append(card);
   }
@@ -89,14 +95,61 @@ const loadTodos = async () => {
   }
 };
 
+if (todosList && todosStatus) {
+  todosList.addEventListener('click', async (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    const completeBtn = target.closest<HTMLButtonElement>('button.todo-check-btn');
+    if (!completeBtn) {
+      return;
+    }
+
+    const todoIdText = completeBtn.dataset.todoId;
+    const todoId = todoIdText ? Number(todoIdText) : NaN;
+    if (!Number.isInteger(todoId) || todoId <= 0) {
+      todosStatus.textContent = 'Invalid todo id.';
+      return;
+    }
+
+    const card = completeBtn.closest<HTMLElement>('article.todo-card');
+    if (!card) {
+      return;
+    }
+
+    completeBtn.disabled = true;
+    card.classList.add('todo-card--completed');
+
+    try {
+      const result = await window.thinkbox.markAsDone(todoId);
+      if (!result.completed) {
+        card.classList.remove('todo-card--completed');
+        todosStatus.textContent = 'Todo was already completed.';
+        return;
+      }
+
+      await loadTodos();
+      todosStatus.textContent = 'Todo completed.';
+    } catch (error) {
+      card.classList.remove('todo-card--completed');
+      todosStatus.textContent =
+        error instanceof Error ? error.message : 'Failed to complete todo.';
+    } finally {
+      completeBtn.disabled = false;
+    }
+  });
+}
+
 if (refreshTodosBtn) {
   refreshTodosBtn.addEventListener('click', () => {
-    void loadTodos();
+    loadTodos();
   });
 }
 
 window.addEventListener('focus', () => {
-  void loadTodos();
+  loadTodos();
 });
 
-void loadTodos();
+loadTodos();
