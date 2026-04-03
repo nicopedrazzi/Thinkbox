@@ -9,7 +9,6 @@ type SavedNote = {
 type generatedNote = {
   noteId: number;
   category: "work"|"personal"|"shopping"|"idea"|"todo"|"other" ;
-  shouldCreateReminder: boolean;
   reminderTitle: string | null;
   reminderText: string | null;
   reminderDate: string | null;
@@ -21,7 +20,6 @@ type savedReminder = {
   noteId: number | null;
   noteContent: string | null;
   category: "work"|"personal"|"shopping"|"idea"|"todo"|"other" ;
-  shouldCreateReminder: boolean;
   reminderTitle: string | null;
   reminderText: string | null;
   reminderDate: string | null;
@@ -42,7 +40,6 @@ type savedTodo = {
   noteContent: string | null;
   isCompleted: boolean;
   category: "work"|"personal"|"shopping"|"idea"|"todo"|"other" ;
-  shouldCreateReminder: boolean;
   reminderTitle: string | null;
   reminderText: string | null;
   reminderDate: string | null;

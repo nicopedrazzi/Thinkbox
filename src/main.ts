@@ -19,7 +19,6 @@ type savedReminder = {
   noteId: number | null;
   noteContent: string | null;
   category: GeneratedReminder['category'];
-  shouldCreateReminder: boolean;
   reminderTitle: string | null;
   reminderText: string | null;
   reminderDate: string | null;
@@ -33,7 +32,6 @@ type savedTodo = {
   noteContent: string | null;
   isCompleted: boolean;
   category: GeneratedReminder['category'];
-  shouldCreateReminder: boolean;
   reminderTitle: string | null;
   reminderText: string | null;
   reminderDate: string | null;
@@ -46,7 +44,6 @@ type savedReminderRow = {
   note_id: number | null;
   note_content: string | null;
   category: GeneratedReminder['category'];
-  should_create_reminder: number;
   reminder_title: string | null;
   reminder_text: string | null;
   reminder_date: string | null;
@@ -59,7 +56,6 @@ const toSavedReminder = (row: savedReminderRow): savedReminder => ({
   noteId: row.note_id,
   noteContent: row.note_content,
   category: row.category,
-  shouldCreateReminder: row.should_create_reminder === 1,
   reminderTitle: row.reminder_title,
   reminderText: row.reminder_text,
   reminderDate: row.reminder_date,
@@ -271,16 +267,14 @@ ipcMain.handle('notes:generate', async (): Promise<GeneratedReminder[]> => {
           INSERT INTO reminders (
             note_id,
             category,
-            should_create_reminder,
             reminder_title,
             reminder_text,
             reminder_date,
             priority
-          ) VALUES (?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?)
         `,
         note.id,
         reminder.category,
-        reminder.shouldCreateReminder ? 1 : 0,
         reminder.reminderTitle,
         reminder.reminderText,
         reminder.reminderDate,
@@ -308,7 +302,6 @@ ipcMain.handle('reminders:show', async (): Promise<savedReminder[]> => {
         r.note_id,
         n.content AS note_content,
         r.category,
-        r.should_create_reminder,
         r.reminder_title,
         r.reminder_text,
         r.reminder_date,
@@ -392,7 +385,6 @@ ipcMain.handle('reminders:update', async (_event, reminderId: unknown, update: u
         r.note_id,
         n.content AS note_content,
         r.category,
-        r.should_create_reminder,
         r.reminder_title,
         r.reminder_text,
         r.reminder_date,
@@ -445,7 +437,6 @@ ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
         note_id,
         is_completed,
         category,
-        should_create_reminder,
         reminder_title,
         reminder_text,
         reminder_date,
@@ -455,14 +446,12 @@ ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
         r.note_id,
         0,
         r.category,
-        r.should_create_reminder,
         r.reminder_title,
         r.reminder_text,
         r.reminder_date,
         r.priority
       FROM reminders AS r
-      WHERE r.should_create_reminder = 1
-        AND r.note_id IS NOT NULL
+      WHERE r.note_id IS NOT NULL
         AND NOT EXISTS (
           SELECT 1
           FROM todos AS t
@@ -477,7 +466,6 @@ ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
     note_content: string | null;
     is_completed: number | null;
     category: GeneratedReminder['category'];
-    should_create_reminder: number;
     reminder_title: string | null;
     reminder_text: string | null;
     reminder_date: string | null;
@@ -491,7 +479,6 @@ ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
         n.content AS note_content,
         COALESCE(t.is_completed, 0) AS is_completed,
         t.category,
-        t.should_create_reminder,
         t.reminder_title,
         t.reminder_text,
         t.reminder_date,
@@ -510,7 +497,6 @@ ipcMain.handle('todos:show', async (): Promise<savedTodo[]> => {
     noteContent: row.note_content,
     isCompleted: row.is_completed === 1,
     category: row.category,
-    shouldCreateReminder: row.should_create_reminder === 1,
     reminderTitle: row.reminder_title,
     reminderText: row.reminder_text,
     reminderDate: row.reminder_date,

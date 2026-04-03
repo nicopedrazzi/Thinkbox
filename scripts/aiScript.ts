@@ -5,7 +5,6 @@ import { defaultModel, ensureModelRuntimeReady, MODEL_BASE_URL } from './modelSt
 
 type NoteClassification = {
   category: 'work' | 'personal' | 'shopping' | 'idea' | 'todo' | 'other';
-  shouldCreateReminder: boolean;
   reminderTitle: string | null;
   reminderText: string | null;
   reminderDate: string | null;
