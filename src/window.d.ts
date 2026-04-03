@@ -42,6 +42,7 @@ type SavedTodo = {
 };
 
 interface ThinkboxApi {
+  markAsDone: (todoId: number) => Promise<{ completed: boolean }>;
   saveNote: (content: string) => Promise<SavedNote>;
   updateNote: (noteId: number, content: string) => Promise<SavedNote>;
   showNote: () => Promise<SavedNote[]>;
@@ -50,7 +51,6 @@ interface ThinkboxApi {
   showReminders: () => Promise<SavedReminder[]>;
   showTodos: () => Promise<SavedTodo[]>;
   showTodosWindow: () => Promise<{ shown: boolean }>;
-  markAsDone: (todoId: number) => Promise<{ completed: boolean }>;
 }
 
 interface Window {

@@ -55,5 +55,5 @@ contextBridge.exposeInMainWorld('thinkbox', {
   showTodos: (): Promise<savedTodo[]> => ipcRenderer.invoke('todos:show'),
   showTodosWindow: (): Promise<{ shown: boolean }> => ipcRenderer.invoke('todos:window:show'),
   markAsDone: (todoId: number): Promise<{ completed: boolean }> =>
-    ipcRenderer.invoke('todos:complete', todoId),
+  ipcRenderer.invoke('todos:complete', todoId),
 });
