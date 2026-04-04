@@ -92,6 +92,11 @@ body {
   gap: 16px;
 }
 
+.content--compact {
+  padding: 16px;
+  gap: 12px;
+}
+
 .hero {
   padding: 18px;
   border-radius: 28px;
@@ -196,6 +201,22 @@ textarea::placeholder {
 .section-title span {
   color: var(--muted);
   font-size: 12px;
+}
+
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.panel {
+  padding: 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .notes {
@@ -528,6 +549,7 @@ textarea::placeholder {
     min-height: 100vh;
   }
 
+  .quick-actions,
   .actions-grid,
   .footer-actions {
     grid-template-columns: 1fr;

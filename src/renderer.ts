@@ -8,12 +8,32 @@ const status = document.querySelector<HTMLParagraphElement>('#status');
 const notesList = document.querySelector<HTMLElement>('#notes-list');
 const remindersList = document.querySelector<HTMLElement>('#reminders-list');
 const notesCount = document.querySelector<HTMLElement>('#notes-count');
+const notesPanel = document.querySelector<HTMLElement>('#notes-panel');
+const remindersPanel = document.querySelector<HTMLElement>('#reminders-panel');
 const aiGeneratorBtn = document.querySelector<HTMLButtonElement>('#gen-btn');
 const openTodosBtn = document.querySelector<HTMLButtonElement>('#open-todos-btn');
+const toggleNotesBtn = document.querySelector<HTMLButtonElement>('#toggle-notes-btn');
+const toggleRemindersBtn = document.querySelector<HTMLButtonElement>('#toggle-reminders-btn');
 
 let editingNoteId: number | null = null;
 let editingReminderId: number | null = null;
 let latestReminders: SavedReminder[] = [];
+
+const setPanelVisibility = (
+  panel: HTMLElement | null,
+  button: HTMLButtonElement | null,
+  visible: boolean,
+  showLabel: string,
+  hideLabel: string,
+) => {
+  if (!panel || !button) {
+    return;
+  }
+
+  panel.hidden = !visible;
+  button.textContent = visible ? hideLabel : showLabel;
+  button.setAttribute('aria-expanded', String(visible));
+};
 
 const resetComposerToCreateMode = () => {
   editingNoteId = null;
@@ -315,6 +335,40 @@ const loadReminders = async () => {
     status.textContent = messageText;
   }
 };
+
+if (toggleNotesBtn) {
+  setPanelVisibility(notesPanel, toggleNotesBtn, false, 'Show notes', 'Hide notes');
+
+  toggleNotesBtn.addEventListener('click', () => {
+    const isVisible = notesPanel ? !notesPanel.hidden : false;
+    const shouldShow = !isVisible;
+    setPanelVisibility(notesPanel, toggleNotesBtn, shouldShow, 'Show notes', 'Hide notes');
+
+    if (shouldShow) {
+      void loadNotes();
+    }
+  });
+}
+
+if (toggleRemindersBtn) {
+  setPanelVisibility(remindersPanel, toggleRemindersBtn, false, 'Show reminders', 'Hide reminders');
+
+  toggleRemindersBtn.addEventListener('click', () => {
+    const isVisible = remindersPanel ? !remindersPanel.hidden : false;
+    const shouldShow = !isVisible;
+    setPanelVisibility(
+      remindersPanel,
+      toggleRemindersBtn,
+      shouldShow,
+      'Show reminders',
+      'Hide reminders',
+    );
+
+    if (shouldShow) {
+      void loadReminders();
+    }
+  });
+}
 
 if (note && sendButton && status) {
   resetComposerToCreateMode();
