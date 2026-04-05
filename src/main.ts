@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, Tray, nativeImage } from 'electron';
 import { initDb } from '../db/dbIndex';
 import { classifyWithLocalModel } from '../scripts/aiScript';
 import { stopModelRuntime } from '../scripts/modelStuff';
@@ -80,17 +80,27 @@ const normalizeOptionalReminderField = (value: unknown, fieldName: string): stri
 };
 
 let dbPromise: ReturnType<typeof initDb> | undefined;
+let mainWindow: BrowserWindow | null = null;
 let todosWindow: BrowserWindow | null = null;
+let tray: Tray | null = null;
+let isQuitting = false;
 
 const getDb = () => dbPromise ??= initDb();
 
 
-const createWindow = () => {
+const createWindow = (): BrowserWindow => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    return mainWindow;
+  }
+
+  const isMac = process.platform === 'darwin';
   const win = new BrowserWindow({
     width: 430,
     height: 420,
     minWidth: 380,
     minHeight: 320,
+    show: !isMac,
+    skipTaskbar: isMac,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
     },
@@ -101,6 +111,101 @@ const createWindow = () => {
   } else {
     void win.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
+
+  win.on('close', (event) => {
+    if (isQuitting || process.platform !== 'darwin') {
+      return;
+    }
+
+    event.preventDefault();
+    win.hide();
+  });
+
+  win.on('closed', () => {
+    if (mainWindow === win) {
+      mainWindow = null;
+    }
+  });
+
+  mainWindow = win;
+  return win;
+};
+
+const showMainWindow = (): void => {
+  const win = createWindow();
+
+  if (win.isMinimized()) {
+    win.restore();
+  }
+
+  win.show();
+  win.focus();
+};
+
+const toggleMainWindow = (): void => {
+  const win = createWindow();
+
+  if (win.isVisible()) {
+    win.hide();
+    return;
+  }
+
+  showMainWindow();
+};
+
+const createTrayIcon = () => {
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <path fill="black" d="M9 1.8l1.9 4.2 4.3 1.9-4.3 1.9L9 14l-1.9-4.2L2.8 7.9l4.3-1.9L9 1.8z"/>
+    </svg>
+  `;
+  const image = nativeImage.createFromDataURL(
+    `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+  );
+
+  if (image.isEmpty()) {
+    return nativeImage.createEmpty();
+  }
+
+  image.setTemplateImage(true);
+  return image.resize({ width: 18, height: 18 });
+};
+
+const createTray = (): Tray => {
+  if (tray) {
+    return tray;
+  }
+
+  const nextTray = new Tray(createTrayIcon());
+  nextTray.setToolTip('ThinkBox');
+  if (process.platform === 'darwin') {
+    nextTray.setTitle('TB');
+  }
+  nextTray.on('click', () => {
+    toggleMainWindow();
+  });
+
+  nextTray.setContextMenu(
+    Menu.buildFromTemplate([
+      {
+        label: 'Show/Hide ThinkBox',
+        click: () => {
+          toggleMainWindow();
+        },
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => {
+          isQuitting = true;
+          app.quit();
+        },
+      },
+    ]),
+  );
+
+  tray = nextTray;
+  return nextTray;
 };
 
 const createTodosWindow = (): BrowserWindow => {
@@ -247,19 +352,18 @@ ipcMain.handle('notes:delete', async (_event, noteId: unknown): Promise<{ delete
 ipcMain.handle('notes:generate', async (): Promise<GeneratedReminder[]> => {
   try {
     const db = await getDb();
-    const notesWithoutReminders = await db.all<Array<{ id: number; content: string }>>(
+    const notesToGenerate = await db.all<Array<{ id: number; content: string }>>(
       `
-        SELECT n.id, n.content
-        FROM notes AS n
-        LEFT JOIN reminders AS r ON r.note_id = n.id
-        WHERE r.note_id IS NULL
-        ORDER BY n.id ASC
+        SELECT id, content
+        FROM notes
+        WHERE COALESCE(is_generated, 0) = 0
+        ORDER BY id ASC
       `,
     );
 
     const generatedReminders: GeneratedReminder[] = [];
 
-    for (const note of notesWithoutReminders) {
+    for (const note of notesToGenerate) {
       const reminder = await classifyWithLocalModel(note.content);
 
       await db.run(
@@ -279,6 +383,15 @@ ipcMain.handle('notes:generate', async (): Promise<GeneratedReminder[]> => {
         reminder.reminderText,
         reminder.reminderDate,
         reminder.priority,
+      );
+
+      await db.run(
+        `
+          UPDATE notes
+          SET is_generated = 1, modified_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `,
+        note.id,
       );
 
       generatedReminders.push({
@@ -540,12 +653,23 @@ ipcMain.handle('todos:complete', async (_event, todoId: unknown): Promise<{ comp
 app
   .whenReady()
   .then(async () => {
+    const isMac = process.platform === 'darwin';
     await getDb();
     createWindow();
 
+    if (isMac) {
+      app.dock.hide();
+      createTray();
+    }
+
     app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
+      if (isMac) {
+        showMainWindow();
+        return;
+      }
+
+      if (BrowserWindow.getAllWindows().length === 0 || !mainWindow) {
+        showMainWindow();
       }
     });
   })
@@ -555,6 +679,7 @@ app
   });
 
 app.on('before-quit', () => {
+  isQuitting = true;
   stopModelRuntime();
 
   if (!dbPromise) {

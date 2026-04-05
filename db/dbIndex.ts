@@ -116,6 +116,23 @@ const migrateShouldCreateReminderColumns = async (db: Awaited<ReturnType<typeof 
   }
 };
 
+const migrateGeneratedNoteFlag = async (db: Awaited<ReturnType<typeof open>>): Promise<void> => {
+  const notesHasGeneratedColumn = await hasColumn(db, 'notes', 'is_generated');
+  if (!notesHasGeneratedColumn) {
+    await db.exec('ALTER TABLE notes ADD COLUMN is_generated INTEGER NOT NULL DEFAULT 0');
+  }
+
+  await db.exec(`
+    UPDATE notes
+    SET is_generated = 1
+    WHERE EXISTS (
+      SELECT 1
+      FROM reminders AS r
+      WHERE r.note_id = notes.id
+    )
+  `);
+};
+
 export async function initDb() {
   const db = await open({
     filename: path.join(app.getPath('userData'), 'thinkbox.db'),
@@ -126,6 +143,7 @@ export async function initDb() {
     CREATE TABLE IF NOT EXISTS notes (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       content TEXT NOT NULL,
+      is_generated INTEGER NOT NULL DEFAULT 0,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP,
       modified_at TEXT DEFAULT CURRENT_TIMESTAMP
     )
@@ -159,6 +177,7 @@ export async function initDb() {
   `);
 
   await migrateShouldCreateReminderColumns(db);
+  await migrateGeneratedNoteFlag(db);
   
   return db;
 }
