@@ -4,7 +4,6 @@ import modifyIcon from './assets/modify.svg';
 
 const note = document.querySelector<HTMLTextAreaElement>('#note');
 const sendButton = document.querySelector<HTMLButtonElement>('#send-btn');
-const status = document.querySelector<HTMLParagraphElement>('#status');
 const notesList = document.querySelector<HTMLElement>('#notes-list');
 const remindersList = document.querySelector<HTMLElement>('#reminders-list');
 const notesCount = document.querySelector<HTMLElement>('#notes-count');
@@ -44,7 +43,7 @@ const resetComposerToCreateMode = () => {
 };
 
 const setComposerToEditMode = (noteId: number, content: string) => {
-  if (!note || !sendButton || !status) {
+  if (!note || !sendButton) {
     return;
   }
 
@@ -52,7 +51,6 @@ const setComposerToEditMode = (noteId: number, content: string) => {
   note.value = content;
   note.focus();
   sendButton.textContent = 'Save changes';
-  status.textContent = `Editing note #${noteId}.`;
 };
 
 const formatDate = (isoDate: string): string => new Date(isoDate).toLocaleString();
@@ -300,24 +298,16 @@ const renderReminders = (savedReminders: SavedReminder[]) => {
 };
 
 const loadNotes = async () => {
-  if (!status) {
-    return;
-  }
-
   try {
     const savedNotes = await window.thinkbox.showNote();
     renderNotes(savedNotes);
   } catch (error) {
     const messageText = error instanceof Error ? error.message : 'Failed to load notes.';
-    status.textContent = messageText;
+    console.error(messageText);
   }
 };
 
 const loadReminders = async () => {
-  if (!status) {
-    return;
-  }
-
   try {
     const reminders = await window.thinkbox.showReminders();
     latestReminders = reminders;
@@ -332,7 +322,7 @@ const loadReminders = async () => {
     renderReminders(reminders);
   } catch (error) {
     const messageText = error instanceof Error ? error.message : 'Failed to load reminders.';
-    status.textContent = messageText;
+    console.error(messageText);
   }
 };
 
@@ -370,31 +360,23 @@ if (toggleRemindersBtn) {
   });
 }
 
-if (note && sendButton && status) {
+if (note && sendButton) {
   resetComposerToCreateMode();
 
   const sendNote = async () => {
     const message = note.value.trim();
 
     if (!message) {
-      status.textContent =
-        editingNoteId === null
-          ? 'Write something before sending.'
-          : 'Write something before saving.';
       return;
     }
 
     sendButton.disabled = true;
-    status.textContent =
-      editingNoteId === null ? 'Saving...' : `Updating note #${editingNoteId}...`;
 
     try {
       if (editingNoteId === null) {
-        const savedNote = await window.thinkbox.saveNote(message);
-        status.textContent = `Saved note #${savedNote.id}.`;
+        await window.thinkbox.saveNote(message);
       } else {
-        const updatedNote = await window.thinkbox.updateNote(editingNoteId, message);
-        status.textContent = `Updated note #${updatedNote.id}.`;
+        await window.thinkbox.updateNote(editingNoteId, message);
       }
 
       note.value = '';
@@ -405,7 +387,7 @@ if (note && sendButton && status) {
       const fallbackMessage =
         editingNoteId === null ? 'Failed to save note.' : 'Failed to update note.';
       const messageText = error instanceof Error ? error.message : fallbackMessage;
-      status.textContent = messageText;
+      console.error(messageText);
     } finally {
       sendButton.disabled = false;
     }
@@ -423,25 +405,19 @@ if (note && sendButton && status) {
   });
 }
 
-if (aiGeneratorBtn && status) {
+if (aiGeneratorBtn) {
   const generateReminders = async () => {
     aiGeneratorBtn.disabled = true;
-    status.textContent = 'Creating reminders...';
 
     try {
-      const reminders = await window.thinkbox.generateNote();
+      await window.thinkbox.generateNote();
       await loadReminders();
-
-      if (reminders.length === 0) {
-        status.textContent = 'Nothing new to add.';
-      } else {
-        status.textContent = `${reminders.length} reminders created.`;
-      }
     } catch (error) {
-      status.textContent =
+      console.error(
         error instanceof Error
           ? error.message
-          : 'Something went wrong while creating reminders.';
+          : 'Something went wrong while creating reminders.',
+      );
     } finally {
       aiGeneratorBtn.disabled = false;
     }
@@ -452,18 +428,17 @@ if (aiGeneratorBtn && status) {
   });
 }
 
-if (openTodosBtn && status) {
+if (openTodosBtn) {
   openTodosBtn.addEventListener('click', () => {
     void (async () => {
       openTodosBtn.disabled = true;
-      status.textContent = 'Opening todo list...';
 
       try {
         await window.thinkbox.showTodosWindow();
-        status.textContent = 'Todo list opened.';
       } catch (error) {
-        status.textContent =
-          error instanceof Error ? error.message : 'Failed to open todo list.';
+        console.error(
+          error instanceof Error ? error.message : 'Failed to open todo list.',
+        );
       } finally {
         openTodosBtn.disabled = false;
       }
@@ -471,12 +446,10 @@ if (openTodosBtn && status) {
   });
 }
 
-if (status) {
-  void loadNotes();
-  void loadReminders();
-}
+void loadNotes();
+void loadReminders();
 
-if (notesList && status) {
+if (notesList) {
   notesList.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof Element)) {
@@ -488,7 +461,6 @@ if (notesList && status) {
       const noteIdText = modifyButton.dataset.noteId;
       const noteId = noteIdText ? Number(noteIdText) : NaN;
       if (!Number.isInteger(noteId) || noteId <= 0) {
-        status.textContent = 'Invalid note id.';
         return;
       }
 
@@ -505,25 +477,18 @@ if (notesList && status) {
     const noteIdText = deleteButton.dataset.noteId;
     const noteId = noteIdText ? Number(noteIdText) : NaN;
     if (!Number.isInteger(noteId) || noteId <= 0) {
-      status.textContent = 'Invalid note id.';
       return;
     }
 
     void (async () => {
       deleteButton.disabled = true;
-      status.textContent = `Deleting note #${noteId}...`;
 
       try {
-        const result = await window.thinkbox.deleteNote(noteId);
-        if (!result.deleted) {
-          status.textContent = `Note #${noteId} was already removed.`;
-        } else {
-          status.textContent = `Deleted note #${noteId}.`;
-        }
+        await window.thinkbox.deleteNote(noteId);
         await loadNotes();
       } catch (error) {
         const messageText = error instanceof Error ? error.message : 'Failed to delete note.';
-        status.textContent = messageText;
+        console.error(messageText);
       } finally {
         deleteButton.disabled = false;
       }
@@ -531,7 +496,7 @@ if (notesList && status) {
   });
 }
 
-if (remindersList && status) {
+if (remindersList) {
   remindersList.addEventListener('click', (event) => {
     const target = event.target;
     if (!(target instanceof Element)) {
@@ -543,13 +508,11 @@ if (remindersList && status) {
       const reminderIdText = modifyButton.dataset.reminderId;
       const reminderId = reminderIdText ? Number(reminderIdText) : NaN;
       if (!Number.isInteger(reminderId) || reminderId <= 0) {
-        status.textContent = 'Invalid reminder id.';
         return;
       }
 
       editingReminderId = reminderId;
       renderReminders(latestReminders);
-      status.textContent = `Editing reminder #${reminderId}.`;
       return;
     }
 
@@ -558,13 +521,11 @@ if (remindersList && status) {
       const reminderIdText = cancelButton.dataset.reminderId;
       const reminderId = reminderIdText ? Number(reminderIdText) : NaN;
       if (!Number.isInteger(reminderId) || reminderId <= 0) {
-        status.textContent = 'Invalid reminder id.';
         return;
       }
 
       editingReminderId = null;
       renderReminders(latestReminders);
-      status.textContent = `Edit cancelled for reminder #${reminderId}.`;
       return;
     }
 
@@ -573,13 +534,11 @@ if (remindersList && status) {
       const reminderIdText = saveButton.dataset.reminderId;
       const reminderId = reminderIdText ? Number(reminderIdText) : NaN;
       if (!Number.isInteger(reminderId) || reminderId <= 0) {
-        status.textContent = 'Invalid reminder id.';
         return;
       }
 
       const card = saveButton.closest<HTMLElement>('.reminder-card');
       if (!card) {
-        status.textContent = 'Unable to update reminder.';
         return;
       }
 
@@ -590,13 +549,11 @@ if (remindersList && status) {
       const activeCancelButton = card.querySelector<HTMLButtonElement>('button.cancel-reminder-btn');
 
       if (!titleInput || !textInput || !dateInput || !prioritySelect) {
-        status.textContent = 'Unable to read reminder fields.';
         return;
       }
 
       const nextPriority = prioritySelect.value.trim().toLowerCase();
       if (!isReminderPriority(nextPriority)) {
-        status.textContent = 'Priority must be low, medium, or high.';
         return;
       }
 
@@ -605,10 +562,9 @@ if (remindersList && status) {
         if (activeCancelButton) {
           activeCancelButton.disabled = true;
         }
-        status.textContent = `Updating reminder #${reminderId}...`;
 
         try {
-          const updatedReminder = await window.thinkbox.updateReminder(reminderId, {
+          await window.thinkbox.updateReminder(reminderId, {
             reminderTitle: toOptionalValue(titleInput.value),
             reminderText: toOptionalValue(textInput.value),
             reminderDate: fromDateTimeLocalValue(dateInput.value),
@@ -616,11 +572,11 @@ if (remindersList && status) {
           });
 
           editingReminderId = null;
-          status.textContent = `Updated reminder #${updatedReminder.id}.`;
           await loadReminders();
         } catch (error) {
-          status.textContent =
-            error instanceof Error ? error.message : 'Failed to update reminder.';
+          console.error(
+            error instanceof Error ? error.message : 'Failed to update reminder.',
+          );
           saveButton.disabled = false;
           if (activeCancelButton) {
             activeCancelButton.disabled = false;
@@ -638,29 +594,23 @@ if (remindersList && status) {
     const reminderIdText = deleteButton.dataset.reminderId;
     const reminderId = reminderIdText ? Number(reminderIdText) : NaN;
     if (!Number.isInteger(reminderId) || reminderId <= 0) {
-      status.textContent = 'Invalid reminder id.';
       return;
     }
 
     void (async () => {
       deleteButton.disabled = true;
-      status.textContent = `Deleting reminder #${reminderId}...`;
 
       try {
-        const result = await window.thinkbox.deleteReminder(reminderId);
+        await window.thinkbox.deleteReminder(reminderId);
         if (editingReminderId === reminderId) {
           editingReminderId = null;
-        }
-        if (!result.deleted) {
-          status.textContent = `Reminder #${reminderId} was already removed.`;
-        } else {
-          status.textContent = `Deleted reminder #${reminderId}.`;
         }
 
         await loadReminders();
       } catch (error) {
-        status.textContent =
-          error instanceof Error ? error.message : 'Failed to delete reminder.';
+        console.error(
+          error instanceof Error ? error.message : 'Failed to delete reminder.',
+        );
       } finally {
         deleteButton.disabled = false;
       }
