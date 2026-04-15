@@ -155,7 +155,7 @@ Please keep PRs focused, readable, and human-reviewed.
 ## Author
 
 Nicolas Pedrazzi  
-`nicolas.pedrazzi@hotmail.com`
+
 
 ## License
 
