@@ -47,7 +47,7 @@ No cloud APIs. No external data sharing. Just local processing.
 
 The main window is built for quick thought capture: type, save, move on.
 
-![ThinkBox main window](docs/screenshots/01-main-window.png)
+![ThinkBox main window](docs/screenshots/01-main-window.png.png)
 
 ### 2) Turn Notes Into Reminders
 
